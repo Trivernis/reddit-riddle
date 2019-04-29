@@ -53,19 +53,19 @@ Options:
 
 ### Example
 
-Download all images from r/EarthPorn:
+Download all images from [r/EarthPorn](https://EarthPorn.reddit.com):
 
 ```sh
 python3 riddle.py EarthPorn
 ```
 
-Download all images from r/astrophotography to a zip-file:
+Download all images from [r/astrophotography](https://astrophotography.reddit.com) to a zip-file:
 
 ```sh
 python3 riddle.py -z astrophotography
 ```
 
-Download a maximum of 200 images from r/astrophotography or r/EarthPorn to one zip-file named coolpics.zip:
+Download a maximum of 200 images from [r/astrophotography](https://astrophotography.reddit.com) and [r/EarthPorn](https://EarthPorn.reddit.com) to one zip-file named coolpics.zip:
 
 ```sh
 python3 riddle.py -z -c 100 -o coolpics astrophotography EarthPorn

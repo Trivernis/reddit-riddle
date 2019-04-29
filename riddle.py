@@ -6,8 +6,8 @@ import optparse
 import zipfile
 import urllib.request as urlreq
 
-user_agent = 'python:riddle:3.0 (by u/Trivernis)'
-img_ext = ['jpg', 'jpeg', 'png', 'svg', 'gif']
+user_agent = 'python:riddle:3.0 (by u/Trivernis)'  # the reddit api user-agent
+img_ext = ['jpg', 'jpeg', 'png']  # default used extensions to filter for images
 
 
 def assert_dir_exist(dirpath):
@@ -40,6 +40,9 @@ def download_file(url: str, dest: str):
 
 
 class ProgressBar:
+    """
+    A simple progressbar.
+    """
     def __init__(self, total=100, prefix='', suffix='', length=50, fill='█'):
         self.prefix = prefix
         self.suffix = suffix
@@ -99,7 +102,7 @@ def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int):
     :return: list of images
     """
     print('[~] Fetching images for %s...' % subreddit)
-    urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)]
+    urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)] # fetches hot images
     return [url for url in urls if url.split('.')[-1] in img_ext]
 
 
@@ -114,8 +117,8 @@ def download_images(images: list, dl_dir: str):
     print('[~] Downloading %s images to %s' % (imgcount, dl_dir))
     pb = ProgressBar(total=imgcount, prefix='[~] Downloading', suffix='Complete')
     assert_dir_exist(dl_dir)
-    
-    for img in images:
+
+    for img in images:  # download each image if it doesn't exist
         pb.tick()
         imgname = img.split('/')[-1]
         name = os.path.join(dl_dir, imgname)
@@ -132,10 +135,13 @@ def compress_folder(folder: str, zip_fname: str):
     """
     print('[~] Compressing folder...')
     mode = 'w'
-    if os.path.isfile(zip_fname):
+
+    if os.path.isfile(zip_fname):  # append to the zipfile if it already exists
         mode = 'a'
+
     zfile = zipfile.ZipFile(zip_fname, mode)
-    for _, _, files in os.walk(folder):
+
+    for _, _, files in os.walk(folder):  # add all files of the folder to the zipfile
         for file in files:
             zfile.write(os.path.join(folder, file), file)
     zfile.close()
@@ -144,13 +150,13 @@ def compress_folder(folder: str, zip_fname: str):
 
 def main():
     options, subreddits = parser_init()
-    with open('config.yaml', 'r') as file:
+    with open('config.yaml', 'r') as file:  # loads the config.yaml file
         try:
             settings = yaml.safe_load(file)
         except yaml.YAMLError as err:
             print(err)
     if settings:
-        if 'image-extensions' in settings:
+        if 'image-extensions' in settings:  # uses image extensions specified in config.yaml fallback to default
             global img_ext
             img_ext = settings['image-extensions']
         credentials = settings['credentials']
@@ -162,9 +168,9 @@ def main():
         for subreddit in subreddits:
             dldest = subreddit
             if options.output:
-                dldest = options.output
+                dldest = options.output  # uses the -o output destination instead of a folder with the subreddit name
             images = get_images(client, subreddit, limit=options.count)
-            if options.zip:
+            if options.zip:  # downloads to a cache-folder first before compressing it to zip
                 download_images(images, '.cache')
                 compress_folder('.cache', dldest+'.zip')
                 shutil.rmtree('.cache')
@@ -173,4 +179,5 @@ def main():
 
 
 if __name__ == '__main__':
+    print('\n--- riddle.py reddit-downloader by u/Trivernis ---\n')
     main()

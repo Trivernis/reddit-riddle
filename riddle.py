@@ -93,19 +93,24 @@ def parser_init():
     parser.add_option('-z', '--zip', dest='zip',
                       action='store_true', default=False,
                       help='Stores the images in a zip file if true')
+    parser.add_option('-n', '--nsfw', dest='nsfw',
+                      action='store_true', default=False,
+                      help='If set nsfw-content is also downloaded.')
     return parser.parse_args()
 
 
-def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int):
+def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int, nsfw: bool = False):
     """
     Uses the reddit api to fetch all image posts
     :param reddit_client: instance of the reddit client
     :param subreddit: reddit subreddit name
     :param limit: max images to download. if set to None the maximum fetchable amout is used.
+    :param nsfw: if set to true, nsfw-images won't be filtered
     :return: list of images
     """
     print('[~] Fetching images for r/%s...' % subreddit)
-    urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)] # fetches hot images
+    urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)
+            if not submission.over_18 or nsfw]  # fetches hot images and filters by nsfw if nsfw not set to true
     return [url for url in urls if url.split('.')[-1] in img_ext]
 
 
@@ -180,7 +185,7 @@ def main():
             dldest = subreddit
             if options.output:
                 dldest = options.output  # uses the -o output destination instead of a folder with the subreddit name
-            images = get_images(client, subreddit, limit=options.count)
+            images = get_images(client, subreddit, limit=options.count, nsfw=options.nsfw)
             if options.zip:  # downloads to a cache-folder first before compressing it to zip
                 download_images(images, '.cache')
                 compress_folder('.cache', dldest+'.zip')

@@ -49,6 +49,7 @@ Options:
                         The name of the output folder. If none is specified,
                         it's the subreddits name.
   -z, --zip             Stores the images in a zip file if true
+  -n, --nsfw            If set nsfw-content is also downloaded.
 ```
 
 ### Example

@@ -191,5 +191,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print('\n--- riddle.py reddit-downloader by u/Trivernis ---\n')
+    print('\n--- riddle.py reddit downloader by u/Trivernis ---\n')
     main()

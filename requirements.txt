@@ -1,0 +1,4 @@
+yaml
+praw
+optparse
+zipfile

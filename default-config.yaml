@@ -1,0 +1,10 @@
+# user app credentials
+credentials:
+  client_id: your app-client id
+  client_secret: your app-client secret
+
+# required extension of the file to be downloaded
+image-extensions:
+  - png
+  - jpg
+  - jpeg

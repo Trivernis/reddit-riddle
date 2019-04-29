@@ -37,7 +37,7 @@ image-extensions:
 
 ### Help output
 
-```sh
+```
 Usage: riddle.py [options] [subreddits]
 
 Options:

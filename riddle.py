@@ -1,3 +1,6 @@
+
+# coding: utf-8
+# author: u/Trivernis
 import os
 import shutil
 import yaml
@@ -46,6 +49,7 @@ class ProgressBar:
     """
     A simple progressbar.
     """
+
     def __init__(self, total=100, prefix='', suffix='', length=50, fill='█'):
         self.prefix = prefix
         self.suffix = suffix
@@ -55,10 +59,19 @@ class ProgressBar:
         self.progress = 0
 
     def tick(self):
+        """
+        Next step of the progressbar. The stepwidth is always 1.
+        :return:
+        """
         self.progress += 1
         self._print_progress()
 
-    def setprogress(self, progress):
+    def setprogress(self, progress: float):
+        """
+        Set the progress of the bar.
+        :param progress: progress in percent
+        :return: None
+        """
         self.progress = progress
         self._print_progress()
 
@@ -72,7 +85,7 @@ class ProgressBar:
         filled_length = int(self.length * iteration // total)
         bar = self.fill * filled_length + '-' * (self.length - filled_length)
         print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
-        # Print New Line on Complete
+        # Print new line on complete
         if iteration == total:
             print()
 
@@ -89,7 +102,8 @@ def parser_init():
                       If not set it is the maximum fetchable number.""")
     parser.add_option('-o', '--output', dest='output',
                       type='str', default=None,
-                      help='The name of the output folder. If none is specified, it\'s the subreddits name.')
+                      help="""The name of the output folder.
+                      If none is specified, it\'s the subreddits name.""")
     parser.add_option('-z', '--zip', dest='zip',
                       action='store_true', default=False,
                       help='Stores the images in a zip file if true')
@@ -110,7 +124,7 @@ def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int, nsfw: boo
     """
     print('[~] Fetching images for r/%s...' % subreddit)
     urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)
-            if not submission.over_18 or nsfw]  # fetches hot images and filters by nsfw if nsfw not set to true
+            if not submission.over_18 or nsfw]  # fetches hot images and filters nsfw if set to false
     return [url for url in urls if url.split('.')[-1] in img_ext]
 
 
@@ -165,6 +179,10 @@ def compress_folder(folder: str, zip_fname: str):
 
 
 def main():
+    """
+    Main entry method. Loads the settings and iterates through subreddits and downloads all images it fetched.
+    If the --zip flag is set, the images will be downloaded in a .cache directory and then compressed.
+    """
     options, subreddits = parser_init()
     with open('config.yaml', 'r') as file:  # loads the config.yaml file
         try:
@@ -172,7 +190,7 @@ def main():
         except yaml.YAMLError as err:
             print(err)
     if settings:
-        if 'image-extensions' in settings:  # uses image extensions specified in config.yaml fallback to default
+        if 'image-extensions' in settings:
             global img_ext
             img_ext = settings['image-extensions']
         credentials = settings['credentials']
@@ -184,11 +202,12 @@ def main():
         for subreddit in subreddits:
             dldest = subreddit
             if options.output:
-                dldest = options.output  # uses the -o output destination instead of a folder with the subreddit name
-            images = get_images(client, subreddit, limit=options.count, nsfw=options.nsfw)
-            if options.zip:  # downloads to a cache-folder first before compressing it to zip
-                download_images(images, '.cache')
-                compress_folder('.cache', dldest+'.zip')
+                dldest = options.output  # uses the -o output destination
+            images = get_images(client, subreddit, limit=options.count,
+                                nsfw=options.nsfw)
+            if options.zip:  # download to zip instead
+                download_images(images, '.cache')  # download to cache
+                compress_folder('.cache', dldest + '.zip')  # add to zip
                 shutil.rmtree('.cache')
             else:
                 download_images(images, dldest)

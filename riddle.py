@@ -25,7 +25,7 @@ def download_file(url: str, dest: str):
     Downloads a url to a file
     :param url: download url
     :param dest: download destination
-    :return: None
+    :return: Success?
     """
     f = open(dest, "wb")
     req = urlreq.Request(url)
@@ -33,10 +33,13 @@ def download_file(url: str, dest: str):
         image = urlreq.urlopen(req)
         f.write(image.read())
         f.close()
+        return True
     except ConnectionError:
         print('\r[-] Connection Error \r')
+        return False
     except urlreq.HTTPError as err:
         print('\r[-] HTTPError for %s: %s \r' % (url, err))
+        return False
 
 
 class ProgressBar:
@@ -101,7 +104,7 @@ def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int):
     :param limit: max images to download. if set to None the maximum fetchable amout is used.
     :return: list of images
     """
-    print('[~] Fetching images for %s...' % subreddit)
+    print('[~] Fetching images for r/%s...' % subreddit)
     urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)] # fetches hot images
     return [url for url in urls if url.split('.')[-1] in img_ext]
 
@@ -114,16 +117,24 @@ def download_images(images: list, dl_dir: str):
     :return: None
     """
     imgcount = len(images)
+    realcount = preexist = 0
     print('[~] Downloading %s images to %s' % (imgcount, dl_dir))
     pb = ProgressBar(total=imgcount, prefix='[~] Downloading', suffix='Complete')
     assert_dir_exist(dl_dir)
 
     for img in images:  # download each image if it doesn't exist
         pb.tick()
+        success = False
         imgname = img.split('/')[-1]
         name = os.path.join(dl_dir, imgname)
         if not os.path.isfile(name):
-            download_file(img, name)
+            success = download_file(img, name)
+        else:
+            preexist += 1
+        if success:
+            realcount += 1
+    print('[+] Successfully downloaded %s out of %s images to %s (%s already existed)' %
+          (realcount, imgcount, dl_dir, preexist))
 
 
 def compress_folder(folder: str, zip_fname: str):
@@ -176,6 +187,7 @@ def main():
                 shutil.rmtree('.cache')
             else:
                 download_images(images, dldest)
+        print('[+] All downloads finished')
 
 
 if __name__ == '__main__':

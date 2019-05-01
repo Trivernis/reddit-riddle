@@ -23,14 +23,16 @@ You can copy the `default-config.yaml` file to the `config.yaml` file and change
 ```yaml
 # user app credentials
 credentials:
-  client_id: your app-client id           # change this
-  client_secret: your app-client secret   # and change this
+  client_id: your app-client id  # change this
+  client_secret: your app-client secret  # change this
 
 # required extension of the file to be downloaded
 image-extensions:
   - png
   - jpg
   - jpeg
+
+min-size: 5 # minimum size in kilobytes
 ```
 
 ## Running

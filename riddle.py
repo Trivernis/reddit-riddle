@@ -11,6 +11,7 @@ import urllib.request as urlreq
 
 user_agent = 'python:riddle:3.0 (by u/Trivernis)'  # the reddit api user-agent
 img_ext = ['jpg', 'jpeg', 'png']  # default used extensions to filter for images
+min_size = 5  # minimum size in kilobytes. changeable in settings
 
 
 def assert_dir_exist(dirpath):
@@ -32,17 +33,29 @@ def download_file(url: str, dest: str):
     """
     f = open(dest, "wb")
     req = urlreq.Request(url)
+    success = False
     try:
         image = urlreq.urlopen(req)
         f.write(image.read())
-        f.close()
-        return True
+        success = True
     except ConnectionError:
         print('\r[-] Connection Error \r')
-        return False
     except urlreq.HTTPError as err:
         print('\r[-] HTTPError for %s: %s \r' % (url, err))
-        return False
+    except urlreq.URLError as err:
+        print('\r[-] URLError for %s: %s \r' % (url, err))
+    f.close()
+    try:
+        file_size = round(os.path.getsize(dest) / 1000)
+        if not success:
+            os.remove(dest)
+        elif file_size < min_size:
+            os.remove(dest)
+            success = False
+            print('\r[-] Removed %s: Too small (%s kb)\r' % (dest, file_size))
+    except IOError as err:
+        print('\r[-] Error when removing file %s: %s' % (dest, err))
+    return success
 
 
 class ProgressBar:
@@ -193,6 +206,9 @@ def main():
         if 'image-extensions' in settings:
             global img_ext
             img_ext = settings['image-extensions']
+        if 'min-size' in settings:
+            global min_size
+            min_size = int(settings['min-size'])
         credentials = settings['credentials']
         client = praw.Reddit(
             client_id=credentials['client_id'],

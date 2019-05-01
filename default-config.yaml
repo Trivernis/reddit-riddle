@@ -8,3 +8,5 @@ image-extensions:
   - png
   - jpg
   - jpeg
+
+min-size: 5 # minimum size in kilobytes

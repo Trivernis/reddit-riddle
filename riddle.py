@@ -142,6 +142,22 @@ def download_images(images: list, dl_dir: str):
           (realcount, imgcount, dl_dir, preexist))
 
 
+def filter_zip_files(images: list, zip_fname: str):
+    """
+    Removes the images that already exist in the zip-file
+    :param images:
+    :param zip_fname:
+    :return:
+    """
+    if os.path.isfile(zip_fname):
+        zfile = zipfile.ZipFile(zip_fname, 'r')
+        zfnames = [f.filename for f in zfile.infolist()]
+        print('[~] Removing entries already in zip-file')
+        return [img for img in images if img.split('/')[-1] not in zfnames]
+    else:
+        return images
+
+
 def compress_folder(folder: str, zip_fname: str):
     """
     Zips the contents of a folder to the destination zipfile name.
@@ -187,6 +203,7 @@ def main():
                 dldest = options.output  # uses the -o output destination instead of a folder with the subreddit name
             images = get_images(client, subreddit, limit=options.count, nsfw=options.nsfw)
             if options.zip:  # downloads to a cache-folder first before compressing it to zip
+                images = filter_zip_files(images, dldest+'.zip')
                 download_images(images, '.cache')
                 compress_folder('.cache', dldest+'.zip')
                 shutil.rmtree('.cache')

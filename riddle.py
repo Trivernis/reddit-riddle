@@ -266,10 +266,11 @@ def main():
                 comp_mode = zipfile.ZIP_STORED
                 if options.lzma:
                     comp_mode = zipfile.ZIP_LZMA
+                cachedir = '.cache-' + dldest.split('/')[-1]
                 images = filter_zip_files(images, dldest+'.zip')
-                download_images(images, '.cache-'+dldest)
-                compress_folder('.cache-'+dldest, dldest+'.zip', compression=comp_mode)
-                shutil.rmtree('.cache-'+dldest)
+                download_images(images, cachedir)
+                compress_folder(cachedir, dldest+'.zip', compression=comp_mode)
+                shutil.rmtree(cachedir)
             else:
                 download_images(images, dldest)
         print('[+] All downloads finished')

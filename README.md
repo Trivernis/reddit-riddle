@@ -8,7 +8,7 @@ This script requires at least Python 3.6.
 After cloning this repository you need to install the requirements via 
 
 ```sh
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Configuration
@@ -51,7 +51,8 @@ Options:
                         The name of the output folder. If none is specified,
                         it's the subreddits name.
   -z, --zip             Stores the images in a zip file if true
-  -n, --nsfw            If set nsfw-content is also downloaded.
+  --nsfw                If set nsfw-content is also downloaded.
+  --lzma                If set the lzma-compression module is used.
 ```
 
 ### Example

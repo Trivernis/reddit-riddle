@@ -24,11 +24,12 @@ def assert_dir_exist(dirpath):
         os.mkdir(dirpath)
 
 
-def download_file(url: str, dest: str):
+def download_file(url: str, dest: str, progressbar = None):
     """
     Downloads a url to a file
     :param url: download url
     :param dest: download destination
+    :param progressbar: The progressbar instance to clear it before writing an error message
     :return: Success?
     """
     f = open(dest, "wb")
@@ -39,11 +40,17 @@ def download_file(url: str, dest: str):
         f.write(image.read())
         success = True
     except ConnectionError:
-        print('\r[-] Connection Error \r')
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] Connection Error')
     except urlreq.HTTPError as err:
-        print('\r[-] HTTPError for %s: %s \r' % (url, err))
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] HTTPError for %s: %s' % (url, err))
     except urlreq.URLError as err:
-        print('\r[-] URLError for %s: %s \r' % (url, err))
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] URLError for %s: %s' % (url, err))
     f.close()
     try:
         file_size = round(os.path.getsize(dest) / 1000)
@@ -52,8 +59,12 @@ def download_file(url: str, dest: str):
         elif file_size < min_size:
             os.remove(dest)
             success = False
-            print('\r[-] Removed %s: Too small (%s kb)\r' % (dest, file_size))
+            if progressbar:
+                progressbar.clear()
+            print('\r[-] Removed %s: Too small (%s kb)' % (dest, file_size))
     except IOError as err:
+        if progressbar:
+            progressbar.clear()
         print('\r[-] Error when removing file %s: %s' % (dest, err))
     return success
 
@@ -70,6 +81,7 @@ class ProgressBar:
         self.length = length
         self.total = total
         self.progress = 0
+        self.textlength = 0
 
     def tick(self):
         """
@@ -97,10 +109,19 @@ class ProgressBar:
         percent = ("{0:." + str(1) + "f}").format(100 * (iteration / float(total)))
         filled_length = int(self.length * iteration // total)
         bar = self.fill * filled_length + '-' * (self.length - filled_length)
-        print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
+        textout = '\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix)
+        print(textout, end='\r')
+        self.textlength = len(textout)
         # Print new line on complete
         if iteration == total:
             print()
+
+    def clear(self):
+        """
+        clear last progress output
+        :return:
+        """
+        print(' '*self.textlength, end='\r')
 
 
 def parser_init():
@@ -120,9 +141,12 @@ def parser_init():
     parser.add_option('-z', '--zip', dest='zip',
                       action='store_true', default=False,
                       help='Stores the images in a zip file if true')
-    parser.add_option('-n', '--nsfw', dest='nsfw',
+    parser.add_option('--nsfw', dest='nsfw',
                       action='store_true', default=False,
                       help='If set nsfw-content is also downloaded.')
+    parser.add_option('--lzma', dest='lzma',
+                      action='store_true', default=False,
+                      help='If set the lzma-compression module is used.')
     return parser.parse_args()
 
 
@@ -155,16 +179,16 @@ def download_images(images: list, dl_dir: str):
     assert_dir_exist(dl_dir)
 
     for img in images:  # download each image if it doesn't exist
-        pb.tick()
         success = False
         imgname = img.split('/')[-1]
         name = os.path.join(dl_dir, imgname)
         if not os.path.isfile(name):
-            success = download_file(img, name)
+            success = download_file(img, name, pb)
         else:
             preexist += 1
         if success:
             realcount += 1
+        pb.tick()
     print('[+] Successfully downloaded %s out of %s images to %s (%s already existed)' %
           (realcount, imgcount, dl_dir, preexist))
 
@@ -185,11 +209,12 @@ def filter_zip_files(images: list, zip_fname: str):
         return images
 
 
-def compress_folder(folder: str, zip_fname: str):
+def compress_folder(folder: str, zip_fname: str, compression: int):
     """
     Zips the contents of a folder to the destination zipfile name.
     :param folder: the folder to zip
     :param zip_fname: the name of the destination zipfile
+    :param compression: The compression method (constant from zipfile module)
     :return: None
     """
     print('[~] Compressing folder...')
@@ -198,7 +223,7 @@ def compress_folder(folder: str, zip_fname: str):
     if os.path.isfile(zip_fname):  # append to the zipfile if it already exists
         mode = 'a'
 
-    zfile = zipfile.ZipFile(zip_fname, mode)
+    zfile = zipfile.ZipFile(zip_fname, mode, compression=compression)
 
     for _, _, files in os.walk(folder):  # add all files of the folder to the zipfile
         for file in files:
@@ -238,10 +263,13 @@ def main():
             images = get_images(client, subreddit, limit=options.count,
                                 nsfw=options.nsfw)
             if options.zip:  # downloads to a cache-folder first before compressing it to zip
+                comp_mode = zipfile.ZIP_STORED
+                if options.lzma:
+                    comp_mode = zipfile.ZIP_LZMA
                 images = filter_zip_files(images, dldest+'.zip')
-                download_images(images, '.cache')
-                compress_folder('.cache', dldest+'.zip')
-                shutil.rmtree('.cache')
+                download_images(images, '.cache-'+dldest)
+                compress_folder('.cache-'+dldest, dldest+'.zip', compression=comp_mode)
+                shutil.rmtree('.cache-'+dldest)
             else:
                 download_images(images, dldest)
         print('[+] All downloads finished')

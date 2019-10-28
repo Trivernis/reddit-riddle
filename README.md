@@ -8,7 +8,11 @@ This script requires at least Python 3.6.
 After cloning this repository you need to install the requirements via 
 
 ```sh
-pip install -r requirements.txt
+pipenv install
+```
+or
+```sh
+pip3 install -r requirements.txt
 ```
 
 ## Configuration
@@ -23,21 +27,23 @@ You can copy the `default-config.yaml` file to the `config.yaml` file and change
 ```yaml
 # user app credentials
 credentials:
-  client_id: your app-client id           # change this
-  client_secret: your app-client secret   # and change this
+  client_id: your app-client id  # change this
+  client_secret: your app-client secret  # change this
 
 # required extension of the file to be downloaded
 image-extensions:
   - png
   - jpg
   - jpeg
+
+min-size: 5 # minimum size in kilobytes
 ```
 
 ## Running
 
 ### Help output
 
-```sh
+```
 Usage: riddle.py [options] [subreddits]
 
 Options:
@@ -49,7 +55,8 @@ Options:
                         The name of the output folder. If none is specified,
                         it's the subreddits name.
   -z, --zip             Stores the images in a zip file if true
-  -n, --nsfw            If set nsfw-content is also downloaded.
+  --nsfw                If set nsfw-content is also downloaded.
+  --lzma                If set the lzma-compression module is used.
 ```
 
 ### Example

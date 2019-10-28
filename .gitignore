@@ -66,3 +66,4 @@ config.yaml
 # data
 .ignore
 .cache
+*.zip

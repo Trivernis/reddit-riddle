@@ -239,7 +239,8 @@ def main():
     If the --zip flag is set, the images will be downloaded in a .cache directory and then compressed.
     """
     options, subreddits = parser_init()
-    with open('config.yaml', 'r') as file:  # loads the config.yaml file
+    config_fname = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config.yaml')
+    with open(config_fname, 'r') as file:  # loads the config.yaml file
         try:
             settings = yaml.safe_load(file)
         except yaml.YAMLError as err:

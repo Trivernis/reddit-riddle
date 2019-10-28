@@ -8,6 +8,10 @@ This script requires at least Python 3.6.
 After cloning this repository you need to install the requirements via 
 
 ```sh
+pipenv install
+```
+or
+```sh
 pip3 install -r requirements.txt
 ```
 

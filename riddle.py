@@ -10,7 +10,7 @@ import optparse
 import zipfile
 import urllib.request as urlreq
 
-user_agent = 'python:riddle:3.0 (by u/Trivernis)'  # the reddit api user-agent
+user_agent = 'linux:riddle:3.0 (by u/Trivernis)'  # the reddit api user-agent
 img_ext = ['jpg', 'jpeg', 'png']  # default used extensions to filter for images
 min_size = 5  # minimum size in kilobytes. changeable in settings
 
@@ -161,8 +161,14 @@ def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int, nsfw: boo
     :return: list of images
     """
     print('[~] Fetching images for r/%s...' % subreddit)
-    urls = [submission.url for submission in reddit_client.subreddit(subreddit).hot(limit=limit)
-            if not submission.over_18 or nsfw]  # fetches hot images and filters nsfw if set to false
+    urls = []
+    try:
+        for submission in reddit_client.subreddit(subreddit).hot(limit=limit):
+            if not submission.over_18 or nsfw:
+                urls.append(submission.url)
+                print('\r[~] %s images' % len(urls), end='\r')
+    except Exception as e:
+        print(e)
     return [url for url in urls if url.split('.')[-1] in img_ext]
 
 

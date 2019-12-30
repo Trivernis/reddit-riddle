@@ -9,65 +9,12 @@ import praw
 import optparse
 import zipfile
 import urllib.request as urlreq
+from PIL import Image
 
 user_agent = 'linux:riddle:3.0 (by u/Trivernis)'  # the reddit api user-agent
 img_ext = ['jpg', 'jpeg', 'png']  # default used extensions to filter for images
 min_size = 5  # minimum size in kilobytes. changeable in settings
-
-
-def assert_dir_exist(dirpath):
-    """
-    Creates the directory if it doesn't exist
-    :param dirpath: path to the directory
-    :return: None
-    """
-    if not os.path.exists(dirpath):
-        os.mkdir(dirpath)
-
-
-def download_file(url: str, dest: str, progressbar = None):
-    """
-    Downloads a url to a file
-    :param url: download url
-    :param dest: download destination
-    :param progressbar: The progressbar instance to clear it before writing an error message
-    :return: Success?
-    """
-    f = open(dest, "wb")
-    req = urlreq.Request(url)
-    success = False
-    try:
-        image = urlreq.urlopen(req)
-        f.write(image.read())
-        success = True
-    except ConnectionError:
-        if progressbar:
-            progressbar.clear()
-        print('\r[-] Connection Error')
-    except urlreq.HTTPError as err:
-        if progressbar:
-            progressbar.clear()
-        print('\r[-] HTTPError for %s: %s' % (url, err))
-    except urlreq.URLError as err:
-        if progressbar:
-            progressbar.clear()
-        print('\r[-] URLError for %s: %s' % (url, err))
-    f.close()
-    try:
-        file_size = round(os.path.getsize(dest) / 1000)
-        if not success:
-            os.remove(dest)
-        elif file_size < min_size:
-            os.remove(dest)
-            success = False
-            if progressbar:
-                progressbar.clear()
-            print('\r[-] Removed %s: Too small (%s kb)' % (dest, file_size))
-    except IOError as err:
-        if progressbar:
-            progressbar.clear()
-        print('\r[-] Error when removing file %s: %s' % (dest, err))
-    return success
+min_mp = 0.5 # minimum megapixels. changeable in the settings
 
 
 class ProgressBar:
@@ -149,6 +96,64 @@ def parser_init():
                       action='store_true', default=False,
                       help='If set the lzma-compression module is used.')
     return parser.parse_args()
+
+
+def assert_dir_exist(dirpath):
+    """
+    Creates the directory if it doesn't exist
+    :param dirpath: path to the directory
+    :return: None
+    """
+    if not os.path.exists(dirpath):
+        os.mkdir(dirpath)
+
+
+def download_file(url: str, dest: str, progressbar = None):
+    """
+    Downloads a url to a file
+    :param url: download url
+    :param dest: download destination
+    :param progressbar: The progressbar instance to clear it before writing an error message
+    :return: Success?
+    """
+    f = open(dest, "wb")
+    req = urlreq.Request(url)
+    success = False
+    try:
+        image = urlreq.urlopen(req)
+        f.write(image.read())
+        success = True
+    except ConnectionError:
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] Connection Error')
+    except urlreq.HTTPError as err:
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] HTTPError for %s: %s' % (url, err))
+    except urlreq.URLError as err:
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] URLError for %s: %s' % (url, err))
+    f.close()
+    try:
+        width, height = Image.open(dest).size
+        mp = (width * height)/1000000
+        file_size = round(os.path.getsize(dest) / 1000)
+        if __name__ == '__main__':
+            if not success:
+                os.remove(dest)
+            elif file_size < min_size or mp < min_mp:
+                os.remove(dest)
+                success = False
+                if progressbar:
+                    progressbar.clear()
+                print('\r[-] Removed %s: Too small (%s kb, %s MP)' % (dest, file_size, mp))
+    except IOError as err:
+        if progressbar:
+            progressbar.clear()
+        print('\r[-] Error when removing file %s: %s' % (dest, err))
+    return success
 
 
 def get_images(reddit_client: praw.Reddit, subreddit: str, limit: int, nsfw: bool = False):
@@ -258,6 +263,9 @@ def main():
         if 'min-size' in settings:
             global min_size
             min_size = int(settings['min-size'])
+        if 'min-mp' in settings:
+            global min_mp
+            min_mp = int(settings['min-mp'])
         credentials = settings['credentials']
         client = praw.Reddit(
             client_id=credentials['client_id'],

@@ -37,6 +37,7 @@ image-extensions:
   - jpeg
 
 min-size: 5 # minimum size in kilobytes
+min-mp: 0.5 # minimum siz ein megapixels
 ```
 
 ## Running

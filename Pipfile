@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 PyYAML = "*"
 praw = "*"
+pillow = "*"
 
 [dev-packages]
 

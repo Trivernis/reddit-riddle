@@ -1,4 +1,5 @@
-# riddle.py [![CodeFactor](https://www.codefactor.io/repository/github/trivernis/reddit-riddle/badge)](https://www.codefactor.io/repository/github/trivernis/reddit-riddle) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0) 
+# riddle.py [![CodeFactor](https://www.codefactor.io/repository/github/trivernis/reddit-riddle/badge)](https://www.codefactor.io/repository/github/trivernis/reddit-riddle) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTrivernis%2Freddit-riddle.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTrivernis%2Freddit-riddle?ref=badge_shield)
+
 
 This is a script for downloading images (or other media) from reddit subreddits.
 
@@ -79,3 +80,7 @@ Download a maximum of 200 images from [r/astrophotography](https://astrophotogra
 ```sh
 python3 riddle.py -z -c 100 -o coolpics astrophotography EarthPorn
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTrivernis%2Freddit-riddle.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTrivernis%2Freddit-riddle?ref=badge_large)
